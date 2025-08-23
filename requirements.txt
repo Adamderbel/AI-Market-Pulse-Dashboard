@@ -1,0 +1,9 @@
+pandas
+numpy
+dash
+dash-bootstrap-components
+plotly
+yfinance
+python-dotenv
+httpx
+fastparquet

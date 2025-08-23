@@ -1,0 +1,224 @@
+"""
+Layout components for Market Dashboard.
+Contains all UI layout definitions.
+"""
+import dash_bootstrap_components as dbc
+from dash import html, dcc
+from typing import List
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
+
+from config.settings import PERIOD_OPTIONS, DATE_RANGE_OPTIONS
+
+
+def create_landing_layout() -> dbc.Container:
+    """
+    Create the landing page layout.
+    
+    Returns:
+        Landing page layout component
+    """
+    return dbc.Container([
+        dbc.Row([
+            dbc.Col([
+                html.H1("AI Market Pulse", className="display-4 mt-5 mb-3 text-center"),
+                html.P(
+                    "Interactive market dashboard with AI insights. Compare assets, explore trends, and export data.",
+                    className="lead text-center"
+                ),
+                html.Hr(className="my-4"),
+                dbc.Row([
+                    dbc.Col(html.Div("• Candlesticks with volume and moving averages"), width=12),
+                    dbc.Col(html.Div("• Multi-asset comparison, correlation heatmap, and return distributions"), width=12),
+                    dbc.Col(html.Div("• AI-generated insights for single and multiple assets"), width=12),
+                ], className="mb-4 text-center"),
+                html.Div(
+                    dbc.Button("Start Analysis", color="primary", size="lg", href="/dashboard", className="px-4"),
+                    className="text-center"
+                ),
+                html.Div(html.Small("Tip: Use filters to tailor your view."), className="text-center mt-3 text-muted")
+            ], width=12)
+        ])
+    ], fluid=True)
+
+
+def create_single_stock_layout(assets: List[str]) -> dbc.Container:
+    """
+    Create the single stock analysis layout.
+    
+    Args:
+        assets: List of available asset symbols
+        
+    Returns:
+        Single stock layout component
+    """
+    return dbc.Container([
+        html.H3("Single Stock Analysis", className="mt-3 mb-3"),
+        dbc.Row([
+            dbc.Col([
+                html.Label("Select Stock:"),
+                dcc.Dropdown(
+                    id="single-asset-dropdown",
+                    options=[{"label": s.upper(), "value": s} for s in assets],
+                    value=assets[0] if len(assets) > 0 else None,
+                    placeholder="Choose a stock...",
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=4),
+            dbc.Col([
+                html.Label("Select Period:"),
+                dcc.Dropdown(
+                    id="single-period-dropdown",
+                    options=PERIOD_OPTIONS,
+                    value="D",
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=3),
+            dbc.Col([
+                html.Label("Date Range:"),
+                dcc.Dropdown(
+                    id="single-date-range",
+                    options=DATE_RANGE_OPTIONS,
+                    value="1y",
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=3),
+            dbc.Col([
+                html.Label("Export:"),
+                dbc.Button("Download CSV", id="btn_csv", color="secondary", className="w-100"),
+                dcc.Download(id="download-dataframe-csv")
+            ], width=2)
+        ], className="mb-4"),
+
+        # Loading spinner wraps the results
+        dcc.Loading(
+            id="loading-single-stock",
+            type="circle",
+            children=html.Div([
+                dbc.Row(id="single-kpi-cards", className="mb-3"),
+                dbc.Row([dbc.Col(dcc.Graph(id="single-price-chart"), width=12)]),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Card([
+                            dbc.CardHeader("AI Insights"),
+                            dbc.CardBody(
+                                id="single-ai-insights",
+                                children="Select a stock to generate insights."
+                            )
+                        ]),
+                        width=12
+                    )
+                ], className="mt-3")
+            ])
+        )
+    ], fluid=True)
+
+
+def create_multi_stock_layout(assets: List[str]) -> dbc.Container:
+    """
+    Create the multi-stock comparison layout.
+    
+    Args:
+        assets: List of available asset symbols
+        
+    Returns:
+        Multi-stock layout component
+    """
+    return dbc.Container([
+        html.H3("Multi-Stock Comparison", className="mt-3 mb-3"),
+        dbc.Row([
+            dbc.Col([
+                html.Label("Select Stocks to Compare:"),
+                dcc.Dropdown(
+                    id="multi-asset-dropdown",
+                    options=[{"label": s.upper(), "value": s} for s in assets],
+                    value=[],
+                    multi=True,
+                    placeholder="Choose 2+ stocks..."
+                )
+            ], width=5),
+            dbc.Col([
+                html.Label("Select Period:"),
+                dcc.Dropdown(
+                    id="multi-period-dropdown",
+                    options=PERIOD_OPTIONS,
+                    value="D"
+                )
+            ], width=3),
+            dbc.Col([
+                html.Label("Date Range:"),
+                dcc.Dropdown(
+                    id="multi-date-range",
+                    options=DATE_RANGE_OPTIONS,
+                    value="1y"
+                )
+            ], width=4),
+        ], className="mb-3"),
+
+        dcc.Loading(
+            id="loading-multi",
+            type="circle",
+            children=html.Div(
+                id="multi-content",
+                style={"display": "none"},
+                children=[
+                    dbc.Row([
+                        dbc.Col(
+                            dcc.Checklist(
+                                id="multi-options",
+                                options=[{"label": "Normalize to 100", "value": "norm"}],
+                                value=["norm"],
+                                inline=True
+                            ),
+                            width=12
+                        )
+                    ], className="mb-2"),
+                    html.Div(id="comparison-insights-container"),
+                    dbc.Row([
+                        dbc.Col(dcc.Graph(id="comparison-chart"), width=12),
+                        dbc.Col(dcc.Graph(id="comparison-heatmap"), width=6),
+                        dbc.Col(dcc.Graph(id="comparison-boxplot"), width=6),
+                    ])
+                ]
+            )
+        )
+    ], fluid=True)
+
+
+def create_dashboard_layout(assets: List[str]) -> dbc.Container:
+    """
+    Create the main dashboard layout with tabs.
+    
+    Args:
+        assets: List of available asset symbols
+        
+    Returns:
+        Dashboard layout component
+    """
+    return dbc.Container([
+        html.H2("📈 AI Market Pulse Dashboard", className="mt-3 mb-3"),
+        dcc.Tabs(id="dashboard-tabs", value='single-stock', children=[
+            dcc.Tab(label='Single Stock Analysis', value='single-stock'),
+            dcc.Tab(label='Multi-Stock Comparison', value='multi-stock'),
+        ]),
+        html.Div(id="single-section", children=create_single_stock_layout(assets)),
+        html.Div(id="multi-section", children=create_multi_stock_layout(assets), style={"display": "none"})
+    ], fluid=True)
+
+
+def create_app_layout() -> html.Div:
+    """
+    Create the root app layout with routing.
+    
+    Returns:
+        Root layout component
+    """
+    return html.Div([
+        dcc.Location(id="url"),
+        html.Div(id="page-content-router")
+    ])
