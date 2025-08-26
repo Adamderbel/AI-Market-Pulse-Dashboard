@@ -80,18 +80,22 @@ def register_callbacks(app, assets):
     
     # Single stock dashboard callback
     @app.callback(
-        [Output("single-kpi-cards", "children"),
-         Output("single-price-chart", "figure"),
-         Output("single-ai-insights", "children")],
-        [Input("single-asset-dropdown", "value"),
-         Input("single-period-dropdown", "value"),
-         Input("single-date-range", "value")]
+        Output("single-results-container", "children"),
+        [Input("btn-analyze-single", "n_clicks")],
+        [State("single-asset-dropdown", "value"),
+         State("single-date-range", "value")],
+        prevent_initial_call=True
     )
-    def update_single_dashboard(symbol, period, date_range):
+    def update_single_dashboard(n_clicks, symbol, date_range):
         try:
+            # Check if button was clicked
+            if not n_clicks:
+                return html.Div()
+
+            # Always use daily period
+            period = "D"
+
             # Validate inputs
-            if period not in {"D", "W", "M"}:
-                period = "D"
             if date_range not in {"30d", "90d", "ytd", "1y", "max"}:
                 date_range = "1y"
             
@@ -131,30 +135,48 @@ def register_callbacks(app, assets):
             # Generate insights
             insights = insights_generator.generate_market_insights(df, symbol, period)
             
-            return kpis, fig, insights
-            
+            # Create the complete single stock layout
+            single_content = html.Div([
+                dbc.Row(kpis, className="mb-3"),
+                dbc.Row([dbc.Col(dcc.Graph(figure=fig), width=12)]),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Card([
+                            dbc.CardHeader("AI Insights"),
+                            dbc.CardBody(dcc.Markdown(insights))
+                        ]),
+                        width=12
+                    )
+                ], className="mt-3")
+            ])
+
+            return single_content
+
         except Exception as e:
             logger.exception(f"Single stock dashboard error: {e}")
-            fallback_fig = go.Figure().update_layout(title="Error rendering chart")
-            return (
-                [dbc.Col(dbc.Card(dbc.CardBody("An error occurred while rendering this view.")), width=12)],
-                fallback_fig,
-                "Insights unavailable due to an error."
-            )
+            error_content = html.Div([
+                dbc.Alert(
+                    "An error occurred while generating the analysis. Please try again.",
+                    color="danger"
+                )
+            ])
+            return error_content
     
     # Download CSV callback
     @app.callback(
         Output("download-dataframe-csv", "data"),
         Input("btn_csv", "n_clicks"),
         [State("single-asset-dropdown", "value"),
-         State("single-period-dropdown", "value"),
          State("single-date-range", "value")],
         prevent_initial_call=True
     )
-    def download_csv(n_clicks, symbol, period, date_range):
+    def download_csv(n_clicks, symbol, date_range):
         if not symbol or df_all.empty:
             return None
-        
+
+        # Always use daily period
+        period = "D"
+
         df_symbol = df_all[df_all["symbol"] == symbol].copy()
         df_symbol = filter_date(df_symbol, date_range)
         df_symbol = resample_data(df_symbol, period)
@@ -164,27 +186,35 @@ def register_callbacks(app, assets):
         
         return dcc.send_data_frame(df_symbol.to_csv, f"{symbol}_{period}_{date_range}.csv", index=False)
 
+
+
     # Multi-stock comparison callback
     @app.callback(
-        [Output("comparison-chart", "figure"),
-         Output("comparison-heatmap", "figure"),
-         Output("comparison-boxplot", "figure"),
-         Output("comparison-insights-container", "children")],
-        [Input("multi-asset-dropdown", "value"),
-         Input("multi-period-dropdown", "value"),
-         Input("multi-date-range", "value"),
-         Input("multi-options", "value")],
+        Output("multi-results-container", "children"),
+        [Input("btn-compare-multi", "n_clicks")],
+        [State("multi-asset-dropdown", "value"),
+         State("multi-date-range", "value")],
+        prevent_initial_call=True
     )
-    def update_comparison_dashboard(symbols, period, date_range, multi_opts):
+    def update_comparison_dashboard(n_clicks, symbols, date_range):
         try:
+            # Check if button was clicked
+            if not n_clicks:
+                return html.Div()
+
+            # Always use daily period and normalize to 100
+            period = "D"
+            multi_opts = ["norm"]  # Always normalize
+
             # Validate inputs
             if not symbols or len(symbols) < 2 or df_all.empty:
-                empty_fig = go.Figure().update_layout(title="Select at least 2 stocks to compare")
-                default_card = dbc.Card([
-                    dbc.CardHeader("Comparative Insights"),
-                    dbc.CardBody("Select at least 2 stocks to generate insights.")
+                error_content = html.Div([
+                    dbc.Alert(
+                        "Please select at least 2 stocks to generate comparison.",
+                        color="warning"
+                    )
                 ])
-                return empty_fig, empty_fig, empty_fig, default_card
+                return error_content
 
             # Build comparison chart
             normalize = (multi_opts is not None) and ("norm" in set(multi_opts))
@@ -210,19 +240,43 @@ def register_callbacks(app, assets):
             insights = insights_generator.generate_comparative_insights(df_all, symbols, period)
             insights_card = dbc.Card([
                 dbc.CardHeader("Comparative Insights"),
-                dbc.CardBody(insights)
+                dbc.CardBody(dcc.Markdown(insights))
             ])
 
-            return comp_fig, heatmap_fig, boxplot_fig, insights_card
+            # Create the complete multi-stock layout
+            multi_content = html.Div([
+                dbc.Row([
+                    dbc.Col(
+                        dcc.Checklist(
+                            id="multi-options",
+                            options=[{"label": "Normalize to 100", "value": "norm"}],
+                            value=["norm"],
+                            inline=True
+                        ),
+                        width=12
+                    )
+                ], className="mb-2"),
+                insights_card,
+                dbc.Row([
+                    dbc.Col(dcc.Graph(figure=comp_fig), width=12),
+                    dbc.Col(dcc.Graph(figure=heatmap_fig), width=6),
+                    dbc.Col(dcc.Graph(figure=boxplot_fig), width=6),
+                ], className="mt-3")
+            ])
+
+            return multi_content
 
         except Exception as e:
             logger.exception(f"Multi-stock dashboard error: {e}")
-            empty_fig = go.Figure().update_layout(title="Error rendering chart")
-            error_card = dbc.Card([
-                dbc.CardHeader("Comparative Insights"),
-                dbc.CardBody("Error generating insights.")
+            error_content = html.Div([
+                dbc.Alert(
+                    "An error occurred while generating the comparison. Please try again.",
+                    color="danger"
+                )
             ])
-            return empty_fig, empty_fig, empty_fig, error_card
+            return error_content
+
+
 
     # Forecasting callbacks with persistence
     @app.callback(
