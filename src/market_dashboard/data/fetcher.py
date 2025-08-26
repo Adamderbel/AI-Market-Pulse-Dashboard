@@ -110,9 +110,10 @@ class DataFetcher:
         """
         today = datetime.now(timezone.utc)
         start_date = (today - timedelta(days=lookback_days)).date()
-        end_date = today.date()
-        
-        logger.info(f"Fetching stocks from {start_date} to {end_date}")
+        # Add 1 day to end_date because Yahoo Finance end parameter is exclusive
+        end_date = (today + timedelta(days=1)).date()
+
+        logger.info(f"Fetching stocks from {start_date} to {end_date} (end date exclusive)")
         
         # Fetch raw data
         stocks_df = self.fetch_stocks_yf(

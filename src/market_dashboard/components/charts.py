@@ -292,3 +292,122 @@ class ChartGenerator:
         except Exception as e:
             logger.error(f"Error creating returns boxplot: {e}")
             return go.Figure().update_layout(title="Error rendering boxplot")
+
+    def create_forecast_chart(
+        self,
+        df: pd.DataFrame,
+        symbol: str,
+        forecast_data: dict,
+        days_ahead: int = 7
+    ) -> go.Figure:
+        """
+        Create a price forecast chart.
+
+        Args:
+            df: Historical price data
+            symbol: Stock symbol
+            forecast_data: Forecast predictions
+            days_ahead: Number of days forecasted
+
+        Returns:
+            Plotly figure object
+        """
+        try:
+            # Use last 60 days for context
+            recent_df = df.tail(60).copy()
+
+            fig = go.Figure()
+
+            # Historical prices
+            fig.add_trace(go.Scatter(
+                x=recent_df["date"],
+                y=recent_df["close"],
+                mode="lines",
+                name="Historical Price",
+                line=dict(color=self.colors["neutral"], width=2)
+            ))
+
+            # Create future dates
+            last_date = recent_df["date"].iloc[-1]
+            future_dates = pd.date_range(
+                start=last_date + pd.Timedelta(days=1),
+                periods=days_ahead,
+                freq='D'
+            )
+
+            # Current price point
+            current_price = recent_df["close"].iloc[-1]
+
+            # Add forecast lines - use the primary model in the data
+            primary_models = [k for k in forecast_data.keys() if not k.endswith('_lower') and not k.endswith('_upper')]
+
+            if primary_models:
+                primary_model = primary_models[0]  # Use the first (and likely only) model
+                forecast_price = forecast_data[primary_model]
+
+                # Forecast line
+                fig.add_trace(go.Scatter(
+                    x=[last_date, future_dates[-1]],
+                    y=[current_price, forecast_price],
+                    mode="lines",
+                    name=f"{primary_model.title()} Forecast",
+                    line=dict(color=self.colors["positive"], width=3, dash="dash")
+                ))
+
+                # Confidence interval
+                lower_key = f'{primary_model}_lower'
+                upper_key = f'{primary_model}_upper'
+                if lower_key in forecast_data and upper_key in forecast_data:
+                    fig.add_trace(go.Scatter(
+                        x=[last_date, future_dates[-1], future_dates[-1], last_date],
+                        y=[current_price, forecast_data[lower_key],
+                           forecast_data[upper_key], current_price],
+                        fill="toself",
+                        fillcolor="rgba(0,100,80,0.2)",
+                        line=dict(color="rgba(255,255,255,0)"),
+                        name="Confidence Interval",
+                        showlegend=True
+                    ))
+
+            # Add trend forecast if available
+            if 'trend_forecast' in forecast_data:
+                fig.add_trace(go.Scatter(
+                    x=[last_date, future_dates[-1]],
+                    y=[current_price, forecast_data['trend_forecast']],
+                    mode="lines",
+                    name="Trend Forecast",
+                    line=dict(color=self.colors["ma20"], width=2, dash="dot")
+                ))
+
+            # Forecast target point
+            if primary_models:
+                primary_model = primary_models[0]
+                fig.add_trace(go.Scatter(
+                    x=[future_dates[-1]],
+                    y=[forecast_data[primary_model]],
+                    mode="markers",
+                    name=f"Target ({days_ahead}d)",
+                    marker=dict(
+                        size=12,
+                        color=self.colors["positive"],
+                        symbol="star"
+                    )
+                ))
+
+            fig.update_layout(
+                title=f"{symbol.upper()} Price Forecast - Next {days_ahead} Days",
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                template=self.template,
+                height=500,
+                hovermode="x unified",
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            )
+
+            fig.update_yaxes(tickprefix="$", tickformat=",.2f")
+
+            return fig
+
+        except Exception as e:
+            logger.error(f"Error creating forecast chart: {e}")
+            return go.Figure().update_layout(title="Error rendering forecast chart")

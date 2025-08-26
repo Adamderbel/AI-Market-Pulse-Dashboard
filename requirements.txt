@@ -7,3 +7,5 @@ yfinance
 python-dotenv
 httpx
 fastparquet
+scikit-learn
+statsmodels

@@ -190,13 +190,99 @@ def create_multi_stock_layout(assets: List[str]) -> dbc.Container:
     ], fluid=True)
 
 
+def create_forecast_layout(assets: List[str]) -> dbc.Container:
+    """
+    Create the stock forecasting layout.
+
+    Args:
+        assets: List of available asset symbols
+
+    Returns:
+        Forecast layout component
+    """
+    return dbc.Container([
+        html.H3("📊 Stock Price Forecasting", className="mt-3 mb-3"),
+        dbc.Row([
+            dbc.Col([
+                html.Label("Select Stock to Forecast:"),
+                dcc.Dropdown(
+                    id="forecast-asset-dropdown",
+                    options=[{"label": s.upper(), "value": s} for s in assets],
+                    value=assets[0] if len(assets) > 0 else None,
+                    placeholder="Choose a stock...",
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=4),
+            dbc.Col([
+                html.Label("Forecast Period:"),
+                dcc.Dropdown(
+                    id="forecast-period-dropdown",
+                    options=[
+                        {"label": "1 Day", "value": 1},
+                        {"label": "3 Days", "value": 3},
+                        {"label": "7 Days", "value": 7},
+                        {"label": "10 Days", "value": 10}
+                    ],
+                    value=7,
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=3),
+            dbc.Col([
+                html.Label("Model Type:"),
+                dcc.Dropdown(
+                    id="forecast-model-dropdown",
+                    options=[
+                        {"label": "Ensemble (Recommended)", "value": "ensemble"},
+                        {"label": "ARIMA (Statistical)", "value": "arima"},
+                        {"label": "Linear Regression", "value": "linear"},
+                        {"label": "Simple Trend", "value": "trend"}
+                    ],
+                    value="ensemble",
+                    persistence=True,
+                    persistence_type="session"
+                )
+            ], width=3),
+            dbc.Col([
+                html.Label("Generate Forecast:"),
+                dbc.Button("Forecast", id="btn-forecast", color="primary", className="w-100"),
+            ], width=2)
+        ], className="mb-4"),
+
+        # Loading spinner for forecast results
+        dcc.Loading(
+            id="loading-forecast",
+            type="circle",
+            children=html.Div([
+                dbc.Row(id="forecast-summary-cards", className="mb-3"),
+                dbc.Row([
+                    dbc.Col(dcc.Graph(id="forecast-chart"), width=12)
+                ]),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Card([
+                            dbc.CardHeader("Forecast Analysis"),
+                            dbc.CardBody(
+                                id="forecast-insights",
+                                children="Select a stock and click 'Forecast' to generate predictions."
+                            )
+                        ]),
+                        width=12
+                    )
+                ], className="mt-3")
+            ])
+        )
+    ], fluid=True)
+
+
 def create_dashboard_layout(assets: List[str]) -> dbc.Container:
     """
     Create the main dashboard layout with tabs.
-    
+
     Args:
         assets: List of available asset symbols
-        
+
     Returns:
         Dashboard layout component
     """
@@ -205,9 +291,11 @@ def create_dashboard_layout(assets: List[str]) -> dbc.Container:
         dcc.Tabs(id="dashboard-tabs", value='single-stock', children=[
             dcc.Tab(label='Single Stock Analysis', value='single-stock'),
             dcc.Tab(label='Multi-Stock Comparison', value='multi-stock'),
+            dcc.Tab(label='Price Forecasting', value='forecasting'),
         ]),
         html.Div(id="single-section", children=create_single_stock_layout(assets)),
-        html.Div(id="multi-section", children=create_multi_stock_layout(assets), style={"display": "none"})
+        html.Div(id="multi-section", children=create_multi_stock_layout(assets), style={"display": "none"}),
+        html.Div(id="forecast-section", children=create_forecast_layout(assets), style={"display": "none"})
     ], fluid=True)
 
 
