@@ -254,25 +254,11 @@ def create_forecast_layout(assets: List[str]) -> dbc.Container:
         dcc.Loading(
             id="loading-forecast",
             type="circle",
-            children=html.Div([
-                dbc.Row(id="forecast-summary-cards", className="mb-3"),
-                dbc.Row([
-                    dbc.Col(dcc.Graph(id="forecast-chart"), width=12)
-                ]),
-                dbc.Row([
-                    dbc.Col(
-                        dbc.Card([
-                            dbc.CardHeader("Forecast Analysis"),
-                            dbc.CardBody(
-                                id="forecast-insights",
-                                children="Select a stock and click 'Forecast' to generate predictions."
-                            )
-                        ]),
-                        width=12
-                    )
-                ], className="mt-3")
-            ])
-        )
+            children=html.Div(id="forecast-results-container")
+        ),
+
+        # Store for persisting forecast results
+        dcc.Store(id="forecast-results-store", storage_type="session")
     ], fluid=True)
 
 

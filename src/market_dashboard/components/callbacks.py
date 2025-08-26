@@ -224,25 +224,31 @@ def register_callbacks(app, assets):
             ])
             return empty_fig, empty_fig, empty_fig, error_card
 
-    # Forecasting callbacks
+    # Forecasting callbacks with persistence
     @app.callback(
-        [Output("forecast-summary-cards", "children"),
-         Output("forecast-chart", "figure"),
-         Output("forecast-insights", "children")],
+        [Output("forecast-results-container", "children"),
+         Output("forecast-results-store", "data")],
         Input("btn-forecast", "n_clicks"),
         [State("forecast-asset-dropdown", "value"),
          State("forecast-period-dropdown", "value"),
-         State("forecast-model-dropdown", "value")],
+         State("forecast-model-dropdown", "value"),
+         State("forecast-results-store", "data")],
         prevent_initial_call=True
     )
-    def update_forecast(n_clicks, symbol, days_ahead, model_type):
+    def update_forecast(n_clicks, symbol, days_ahead, model_type, stored_results):
         try:
+            # If no button click, return stored results or empty
+            if not n_clicks:
+                if stored_results:
+                    return stored_results.get("content", html.Div()), stored_results
+                else:
+                    return html.Div(), {}
+
             if not symbol or df_all.empty:
-                return (
-                    [dbc.Col(dbc.Card(dbc.CardBody("Select a stock to generate forecast.")), width=12)],
-                    go.Figure().update_layout(title="No data"),
-                    "Select a stock and click 'Forecast' to generate predictions."
-                )
+                empty_content = html.Div([
+                    dbc.Alert("Please select a stock to generate forecast.", color="warning")
+                ])
+                return empty_content, {}
 
             # Get data for the selected symbol
             df_symbol = df_all[df_all["symbol"] == symbol].copy()
@@ -417,13 +423,14 @@ Analyze this stock forecast for {symbol.upper()}:
 Provide a brief 2-3 sentence analysis of what happened in the recent period and what this prediction means. Keep it concise and professional.
 """
 
-                        # Generate insights using Ollama
-                        insights = insights_generator.generate_market_insights(
-                            df_symbol, symbol, "custom"
+                        # Generate forecast-specific insights using Ollama
+                        ai_insights = insights_generator.generate_forecast_insights(
+                            df_symbol, symbol, current_price, forecast_price,
+                            days_ahead, model_type, accuracy
                         )
 
-                        # If Ollama fails, use the custom prompt
-                        if "Ollama server is not available" in insights or "Unable to generate insights" in insights:
+                        # Format the forecast insights in the requested style
+                        if "Unable to generate" in ai_insights or "Insufficient data" in ai_insights:
                             try:
                                 # Try direct Ollama call
                                 ai_insights = ollama_client.chat(
@@ -465,14 +472,14 @@ The {model_type.replace('_', ' ').title()} model predicts {symbol.upper()} will 
 *Note: AI analysis unavailable - using statistical summary.*
 """
                         else:
-                            # Format the AI insights in the requested style
+                            # Use the AI-generated forecast insights directly
                             insights = f"""**🤖 AI-Powered Forecast Analysis for {symbol.upper()}**
 
 **Prediction:** ${current_price:.2f} → ${forecast_price:.2f} ({change_pct:+.2f}% in {days_ahead} day{'s' if days_ahead > 1 else ''})
 
 **Model:** {model_type.replace('_', ' ').title()} with {accuracy:.1f}% accuracy
 
-{insights}"""
+{ai_insights}"""
 
                     except Exception as e:
                         logger.error(f"Error generating AI insights: {e}")
@@ -536,16 +543,55 @@ The {model_type.replace('_', ' ').title()} model predicts {symbol.upper()} will 
                     *Note: This is a simplified forecast. For better accuracy, ensure sufficient historical data.*
                     """
 
-            return summary_cards, forecast_chart, insights
+            # Create the complete forecast layout
+            forecast_content = html.Div([
+                dbc.Row(summary_cards, className="mb-3"),
+                dbc.Row([
+                    dbc.Col(dcc.Graph(figure=forecast_chart), width=12)
+                ]),
+                dbc.Row([
+                    dbc.Col(
+                        dbc.Card([
+                            dbc.CardHeader("Forecast Analysis"),
+                            dbc.CardBody(dcc.Markdown(insights))
+                        ]),
+                        width=12
+                    )
+                ], className="mt-3")
+            ])
+
+            # Store the results for persistence
+            stored_data = {
+                "content": forecast_content,
+                "symbol": symbol,
+                "days_ahead": days_ahead,
+                "model_type": model_type,
+                "timestamp": pd.Timestamp.now().isoformat()
+            }
+
+            return forecast_content, stored_data
 
         except Exception as e:
             logger.exception(f"Forecasting error: {e}")
-            fallback_fig = go.Figure().update_layout(title="Error generating forecast")
-            return (
-                [dbc.Col(dbc.Card(dbc.CardBody("An error occurred while generating the forecast.")), width=12)],
-                fallback_fig,
-                "Unable to generate forecast due to an error."
-            )
+            error_content = html.Div([
+                dbc.Alert(
+                    "An error occurred while generating the forecast. Please try again.",
+                    color="danger"
+                )
+            ])
+            return error_content, {}
+
+    # Callback to restore forecast results when switching tabs
+    @app.callback(
+        Output("forecast-results-container", "children", allow_duplicate=True),
+        Input("forecast-results-store", "data"),
+        prevent_initial_call=True
+    )
+    def restore_forecast_results(stored_data):
+        """Restore forecast results from storage when switching tabs."""
+        if stored_data and "content" in stored_data:
+            return stored_data["content"]
+        return html.Div()
 
 
 def create_kpi_cards(df, period):

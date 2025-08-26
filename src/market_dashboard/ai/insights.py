@@ -195,3 +195,126 @@ Write 3-5 sentences covering:
         except Exception as e:
             logger.error(f"Error generating comparative insights: {e}")
             return f"Unable to generate comparative insights: {str(e)}"
+
+    def generate_forecast_insights(self, df: pd.DataFrame, symbol: str,
+                                 current_price: float, forecast_price: float,
+                                 days_ahead: int, model_name: str,
+                                 model_accuracy: float) -> str:
+        """
+        Generate AI-powered insights specifically for price forecasting.
+
+        Args:
+            df: DataFrame with historical market data
+            symbol: Asset symbol
+            current_price: Current stock price
+            forecast_price: Predicted price
+            days_ahead: Number of days in the forecast
+            model_name: Name of the forecasting model used
+            model_accuracy: Accuracy percentage of the model
+
+        Returns:
+            Human-readable forecast insights with investment advice
+        """
+        try:
+            # Basic validation
+            if df is None or df.empty:
+                return "Insufficient data to generate forecast insights."
+
+            # Calculate forecast metrics
+            price_change = forecast_price - current_price
+            price_change_pct = (price_change / current_price) * 100 if current_price != 0 else 0
+
+            # Analyze recent trend
+            recent_data = df.tail(10)
+            if len(recent_data) >= 2:
+                recent_trend = "increasing" if recent_data['close'].iloc[-1] > recent_data['close'].iloc[0] else "decreasing"
+                volatility = recent_data['close'].pct_change().std() * 100
+            else:
+                recent_trend = "stable"
+                volatility = 0
+
+            # Determine investment recommendation based on multiple factors
+            def get_investment_advice():
+                # Strong positive prediction with high accuracy
+                if price_change_pct > 3 and model_accuracy > 80:
+                    return "Strong Buy - High confidence upward movement expected"
+                # Moderate positive with good accuracy
+                elif price_change_pct > 1 and model_accuracy > 70:
+                    return "Buy - Moderate upward potential with good model reliability"
+                # Small positive or high volatility
+                elif price_change_pct > 0 and volatility < 5:
+                    return "Hold/Light Buy - Modest gains expected, consider position sizing"
+                # Negative prediction with high accuracy
+                elif price_change_pct < -3 and model_accuracy > 80:
+                    return "Sell/Avoid - High confidence downward movement expected"
+                # Moderate negative
+                elif price_change_pct < -1 and model_accuracy > 70:
+                    return "Hold/Reduce - Downward pressure anticipated"
+                # Low accuracy or minimal change
+                elif model_accuracy < 60 or abs(price_change_pct) < 1:
+                    return "Hold - Low conviction forecast, maintain current position"
+                else:
+                    return "Hold - Mixed signals, monitor closely"
+
+            investment_advice = get_investment_advice()
+
+            # Check if Ollama server is available
+            if not self.ollama_client.is_server_available():
+                # Fallback to structured analysis without AI
+                return f"""The {model_name} model predicts {symbol.upper()} will move from ${current_price:.2f} to ${forecast_price:.2f} over {days_ahead} days ({price_change_pct:+.2f}%). Recent trend has been {recent_trend} with {volatility:.1f}% volatility.
+
+Investment Recommendation: {investment_advice}"""
+
+            # Create detailed prompt for AI analysis
+            prompt = f"""
+Analyze this stock forecast for {symbol.upper()} and provide investment insights:
+
+FORECAST DETAILS:
+- Current Price: ${current_price:.2f}
+- Predicted Price: ${forecast_price:.2f} ({price_change_pct:+.2f}% in {days_ahead} days)
+- Model: {model_name} with {model_accuracy:.1f}% accuracy
+- Recent Trend: {recent_trend}
+- Volatility: {volatility:.1f}%
+
+Provide a 2-3 sentence summary of:
+1. What the forecast indicates about the stock's direction and magnitude
+2. Key factors supporting or challenging this prediction
+3. Clear investment recommendation (Buy/Sell/Hold) with brief reasoning
+
+Be concise, professional, and actionable. Focus on practical investment implications.
+"""
+
+            # Generate AI insights
+            ai_content = self.ollama_client.chat(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a professional investment analyst. Provide clear, concise forecast analysis "
+                            "with actionable investment advice. Be direct about buy/sell/hold recommendations "
+                            "based on the forecast data. Avoid disclaimers and focus on practical insights."
+                        )
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3,
+                max_tokens=200
+            )
+
+            # Combine AI insights with structured recommendation
+            return f"{ai_content}\n\nInvestment Recommendation: {investment_advice}"
+
+        except OllamaError as e:
+            logger.error(f"Ollama error in forecast insights: {e}")
+            # Fallback analysis
+            price_change_pct = ((forecast_price - current_price) / current_price) * 100 if current_price != 0 else 0
+            direction = "upward" if price_change_pct > 0 else "downward" if price_change_pct < 0 else "sideways"
+            magnitude = "significant" if abs(price_change_pct) > 3 else "moderate" if abs(price_change_pct) > 1 else "minimal"
+
+            return f"""The {model_name} model forecasts a {magnitude} {direction} movement for {symbol.upper()}, predicting a {price_change_pct:+.2f}% change over {days_ahead} days. With {model_accuracy:.1f}% model accuracy, this suggests {"strong" if model_accuracy > 80 else "moderate" if model_accuracy > 60 else "weak"} confidence in the prediction.
+
+Investment Recommendation: {"Buy" if price_change_pct > 2 and model_accuracy > 70 else "Sell" if price_change_pct < -2 and model_accuracy > 70 else "Hold"} - {"High" if model_accuracy > 80 else "Moderate" if model_accuracy > 60 else "Low"} confidence forecast."""
+
+        except Exception as e:
+            logger.error(f"Error generating forecast insights: {e}")
+            return f"Unable to generate forecast insights: {str(e)}"
