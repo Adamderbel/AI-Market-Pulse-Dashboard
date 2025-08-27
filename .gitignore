@@ -138,6 +138,8 @@ data/processed/
 logs/
 .DS_Store
 Thumbs.db
+config/email_config.json
+scripts/test_email.py
 
 # IDE
 .vscode/

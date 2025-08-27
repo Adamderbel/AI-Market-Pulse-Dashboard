@@ -46,10 +46,10 @@ def main():
     success = loader.load_all_data()
     
     if success:
-        print("✅ Data loading complete.")
+        print("Data loading complete.")
         return 0
     else:
-        print("❌ Data loading failed.")
+        print("Data loading failed.")
         return 1
 
 if __name__ == "__main__":

@@ -38,12 +38,12 @@ def main():
     )
     
     if processed_data.empty:
-        print("❌ No data fetched. Check your internet connection and try again.")
+        print("No data fetched. Check your internet connection and try again.")
         return 1
     
     # Print summary
     fetcher.print_summary(processed_data)
-    print("✅ Data fetching complete.")
+    print("Data fetching complete.")
     
     return 0
 
