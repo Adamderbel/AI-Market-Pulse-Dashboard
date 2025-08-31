@@ -131,56 +131,48 @@ market-dashboard/
 - Internet connection for data fetching
 - Ollama (optional, for AI insights)
 
-### Installation
+### Installation Steps
 
-1. **Clone and Setup**
+1. **Clone the Repository and Set Up Virtual Environment**
    ```bash
    git clone https://github.com/Adamderbel/AI-Market-Pulse-Dashboard.git
    cd market-dashboard
    python -m venv myenv
-   
-   # Windows
-   myenv\Scripts\activate
-   
-   # Linux/macOS
-   source myenv/bin/activate
    ```
+   Activate the virtual environment:
+   - **Windows**: `myenv\Scripts\activate`
+   - **Linux/macOS**: `source myenv/bin/activate`
 
 2. **Install Dependencies**
    ```bash
    pip install -r requirements.txt
    ```
-3. Set Up Ollama
- -Install [Ollama](https://ollama.com/download) (supports Linux, macOS, Windows).
- 
- -Start the Ollama server:
+
+3. **Set Up Ollama (for AI Features)**
+   - Download and install Ollama from [ollama.com/download](https://ollama.com/download).
+   - Start the Ollama server:
+     ```bash
+     ollama serve
+     ```
+   - Pull and run the Mistral model (or any supported model):
+     ```bash
+     ollama pull mistral:latest
+     ollama run mistral
+     ```
+
+4. **Fetch and Load Initial Data**
    ```bash
-   ollama serve
-   ```
- -Pull and run the Mistral model (or any Ollama-supported model):
-   ```bash
-   ollama pull mistral
-   ollama run mistral
+   python scripts/fetch_data.py  # Fetch market data from Yahoo Finance
+   python scripts/load_to_db.py  # Load data into SQLite database
    ```
 
-3. **Initial Data Setup**
-   ```bash
-   # Fetch initial market data
-   python scripts/fetch_data.py
-   
-   # Load data to database
-   python scripts/load_to_db.py
-   ```
-
-4. **Run the Dashboard**
+5. **Run the Dashboard**
    ```bash
    python main.py
    ```
 
-5. **Open Browser**
-   ```
-   http://localhost:8050
-   ```
+6. **Access the Dashboard**
+   Open your browser and navigate to [http://localhost:8050](http://localhost:8050).
 
 
 ## 🤖 Automation Setup
