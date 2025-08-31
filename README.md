@@ -135,7 +135,7 @@ market-dashboard/
 
 1. **Clone and Setup**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Adamderbel/AI-Market-Pulse-Dashboard.git
    cd market-dashboard
    python -m venv myenv
    
