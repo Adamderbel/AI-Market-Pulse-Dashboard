@@ -1,8 +1,9 @@
 # 📈 AI Market Pulse Dashboard
 
-A comprehensive, modular AI-powered market analysis platform with automated data management, interactive visualizations, and intelligent insights. Built for professional market analysis with enterprise-grade automation and AI integration.
+A comprehensive, modular AI powered market analysis platform with automated data management, interactive visualizations, and intelligent insights. Built for professional market analysis with enterprise grade automation and AI integration.
 
 **Note**: While this version focuses on financial markets, the modular design allows easy adaptation to other data sources (e.g., Google Ads, IoT sensors, weather). This demonstrates extensibility beyond finance. The choice of financial data was made due to its availability and ease of access.
+> 🔗 *Demo:* [AI Market Pulse Dashboard](https://adamderbel.github.io/Adam-Portfolio/ai-market-pulse.html)
 
 ## 🚀 Core Features
 
@@ -71,7 +72,7 @@ A comprehensive, modular AI-powered market analysis platform with automated data
 - **Performance Comparison**: Normalized price charts for multiple assets
 - **Correlation Analysis**: Interactive heatmaps showing asset relationships
 - **Statistical Analysis**: Return distributions, volatility comparisons
-- **Comparative Insights**: AI-powered analysis of relative performance
+- **Comparative Insights**: AI powered analysis of relative performance
 
 ### 3. **Price Forecasting Dashboard**
 - **Multiple Models**: Choose from Linear Regression, ARIMA, or Ensemble methods
@@ -88,7 +89,7 @@ A comprehensive, modular AI-powered market analysis platform with automated data
 - **Loader** (`src/market_dashboard/data/loader.py`): Data processing and storage pipeline
 
 ### **AI & Analytics Layer**
-- **Insights Generator** (`src/market_dashboard/ai/insights.py`): AI-powered market analysis
+- **Insights Generator** (`src/market_dashboard/ai/insights.py`): AI powered market analysis
 - **Ollama Client** (`src/market_dashboard/ai/ollama_client.py`): Local LLM integration
 - **Forecasting** (`src/market_dashboard/utils/forecasting.py`): ML models and predictions
 
@@ -123,15 +124,7 @@ market-dashboard/
 └── requirements.txt              # Python dependencies
 ```
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.8+
-- Virtual environment (recommended)
-- Internet connection for data fetching
-- Ollama (optional, for AI insights)
-
-### Installation Steps
+## 🖥️ Setup Instructions
 
 1. **Clone the Repository and Set Up Virtual Environment**
    ```bash
@@ -157,7 +150,6 @@ market-dashboard/
    - Pull and run the Mistral model (or any supported model):
      ```bash
      ollama pull mistral:latest
-     ollama run mistral
      ```
 
 4. **Fetch and Load Initial Data**
@@ -255,17 +247,6 @@ python scripts/load_to_db.py
 - Ensure sufficient disk space
 - Try deleting `market.db` and re-running data scripts
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests for new functionality
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-
 ## 🔧 Customization
 
 ### Adding New Stocks
@@ -293,21 +274,12 @@ def custom_analysis(self, data, symbol):
     # Your custom AI analysis
     return insights
 ```
+## 💻 System Requirements
 
-## 📊 Performance
-
-### System Requirements
 - **RAM**: 4GB minimum, 8GB recommended
 - **Storage**: 1GB for data and logs
 - **CPU**: Any modern processor (2+ cores recommended)
 - **Network**: Stable internet for data fetching
-
-### Performance Metrics
-- **Data Fetching**: ~2-5 seconds for 9 stocks (730 days)
-- **Dashboard Loading**: ~1-3 seconds initial load
-- **AI Insights**: ~3-10 seconds (depends on Ollama model)
-- **Database Operations**: <1 second for typical queries
-- **Chart Rendering**: ~0.5-2 seconds for complex visualizations
 
 ### Health Checks
 ```bash
@@ -321,30 +293,16 @@ python -c "from market_dashboard.data import DatabaseManager; db = DatabaseManag
 python -c "from market_dashboard.ai import InsightsGenerator; print('AI integration available')"
 ```
 
-## 📞 Support
+## 🤝 Contributing
 
-### Getting Help
-- **Documentation**: This README and inline code comments
-- **Issues**: Create GitHub issues for bugs or feature requests
-- **Discussions**: Use GitHub discussions for questions
-- **Email**: Contact maintainers for urgent issues
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Add tests for new functionality
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
-### Reporting Bugs
-1. Check existing issues first
-2. Provide detailed reproduction steps
-3. Include system information and logs
-4. Attach relevant configuration files (without sensitive data)
-
-### Feature Requests
-1. Describe the use case and benefit
-2. Provide examples or mockups if applicable
-3. Consider contributing the feature yourself
-
-## �🙏 Acknowledgments
-
-- **Yahoo Finance**
-- **Plotly/Dash** 
-- **Ollama** 
 
 ---
 
