@@ -31,6 +31,15 @@ def create_app():
     Returns:
         Configured Dash app instance
     """
+    # Initialize database first
+    db_manager = DatabaseManager(DB_PATH)
+    try:
+        db_manager.initialize_database()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing database: {e}")
+        raise
+    
     # Initialize Dash app
     app = Dash(
         __name__,
@@ -40,7 +49,6 @@ def create_app():
     )
     
     # Load available assets
-    db_manager = DatabaseManager(DB_PATH)
     assets = db_manager.get_available_symbols()
     
     if not assets:

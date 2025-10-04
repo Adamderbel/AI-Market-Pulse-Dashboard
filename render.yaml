@@ -4,8 +4,8 @@ services:
     env: python
     buildCommand: |
       pip install -r requirements.txt
-      python -c "from market_dashboard.data.database import DatabaseManager; DatabaseManager('/opt/render/project/src/market.db').initialize_database()"
-    startCommand: gunicorn market_dashboard.app:server
+      python -c "import sys; sys.path.append('/opt/render/project/src'); from market_dashboard.data.database import DatabaseManager; DatabaseManager('/opt/render/project/src/market.db').initialize_database()"
+    startCommand: gunicorn "src.market_dashboard.app:server" --chdir /opt/render/project/
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.8
@@ -15,6 +15,10 @@ services:
         value: "INFO"
       - key: DB_PATH
         value: /opt/render/project/src/market.db
+      - key: DASH_HOST
+        value: 0.0.0.0
+      - key: DASH_PORT
+        value: "10000"
       - key: OPENROUTER_API_KEY
         sync: false  # This will prompt for the value in Render dashboard
     plan: free

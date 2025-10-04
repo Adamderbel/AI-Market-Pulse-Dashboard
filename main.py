@@ -22,4 +22,4 @@ if __name__ == "__main__":
     print(f"Starting Market Dashboard on {host}:{port}")
     print(f"Debug mode: {debug}")
     
-    app.run_server(debug=debug, host=host, port=port)
+    app.run(debug=debug, host=host, port=port)
