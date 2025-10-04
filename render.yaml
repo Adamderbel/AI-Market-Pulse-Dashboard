@@ -2,10 +2,8 @@ services:
   - type: web
     name: ai-market-pulse-dashboard
     env: python
-    buildCommand: |
-      pip install -r requirements.txt
-      python -c "import sys; sys.path.append('/opt/render/project/src'); from market_dashboard.data.database import DatabaseManager; DatabaseManager('/opt/render/project/src/market.db').initialize_database()"
-    startCommand: gunicorn "src.market_dashboard.app:server" --chdir /opt/render/project/
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn market_dashboard.app:server
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.8
@@ -13,12 +11,4 @@ services:
         value: "False"
       - key: LOG_LEVEL
         value: "INFO"
-      - key: DB_PATH
-        value: /opt/render/project/src/market.db
-      - key: DASH_HOST
-        value: 0.0.0.0
-      - key: DASH_PORT
-        value: "10000"
-      - key: OPENROUTER_API_KEY
-        sync: false  # This will prompt for the value in Render dashboard
     plan: free
