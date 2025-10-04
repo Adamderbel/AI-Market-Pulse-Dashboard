@@ -200,3 +200,52 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error getting table info for {table_name}: {e}")
             return {}
+            
+    def initialize_database(self):
+        """
+        Initialize database with required tables if they don't exist.
+        """
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # Create market_all table if it doesn't exist
+                cursor.execute('''
+                CREATE TABLE IF NOT EXISTS market_all (
+                    date TEXT,
+                    symbol TEXT,
+                    open REAL,
+                    high REAL,
+                    low REAL,
+                    close REAL,
+                    volume INTEGER,
+                    PRIMARY KEY (date, symbol)
+                )
+                ''')
+                
+                # Create market_latest table if it doesn't exist
+                cursor.execute('''
+                CREATE TABLE IF NOT EXISTS market_latest (
+                    symbol TEXT PRIMARY KEY,
+                    date TEXT,
+                    open REAL,
+                    high REAL,
+                    low REAL,
+                    close REAL,
+                    volume INTEGER,
+                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                ''')
+                
+                # Create indices for better query performance
+                cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_market_all_symbol 
+                ON market_all(symbol, date DESC)
+                ''')
+                
+                conn.commit()
+                logger.info("Database initialized successfully")
+                
+        except Exception as e:
+            logger.error(f"Error initializing database: {e}")
+            raise
