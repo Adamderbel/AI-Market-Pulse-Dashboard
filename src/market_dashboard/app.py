@@ -55,6 +55,9 @@ def create_app():
     # Register callbacks
     register_callbacks(app, assets)
     
+    # Store the server for Gunicorn
+    server = app.server
+    
     return app
 
 
@@ -71,6 +74,10 @@ def run_app():
         port=DASH_PORT
     )
 
+
+# For Gunicorn
+app = create_app()
+server = app.server
 
 if __name__ == "__main__":
     run_app()
