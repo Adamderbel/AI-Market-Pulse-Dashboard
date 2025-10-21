@@ -5,6 +5,10 @@ Main entry point for Market Dashboard application.
 import os
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add src and project root to path for imports
 project_root = Path(__file__).parent

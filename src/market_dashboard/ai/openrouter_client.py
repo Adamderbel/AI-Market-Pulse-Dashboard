@@ -3,12 +3,12 @@ AI-powered market insights generation.
 Provides market analysis using OpenRouter's Mistral 7B model.
 """
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import pandas as pd
 import logging
 import asyncio
 
-from .openrouter_client import OpenRouterClient, OpenRouterError
+from .openrouter_client_impl import OpenRouterClient, OpenRouterError
 
 logger = logging.getLogger(__name__)
 
@@ -195,33 +195,50 @@ Write 3-5 sentences covering:
 
             investment_advice = get_investment_advice()
 
-            prompt = f"""
+            try:
+                prompt = f"""
 Analyze this stock forecast for {symbol.upper()}:
 
 Current Price: ${current_price:.2f}
-Predicted Price: ${forecast_price:.2f} ({price_change_pct:+.2f}% over {days_ahead} days)
-Model: {model_name} ({model_accuracy:.1f}% accuracy)
+Forecast Price: ${forecast_price:.2f} ({price_change_pct:+.2f}%)
+Time Horizon: {days_ahead} days
+Model: {model_name}
+Model Accuracy: {model_accuracy:.1f}%
 Recent Trend: {recent_trend}
-Volatility: {volatility:.1f}%
+Volatility: {volatility:.2f}%
 
-Provide a 2-3 sentence summary:
-- Forecast direction and magnitude
-- Key factors supporting/challenging prediction
-- Clear investment recommendation (Buy/Sell/Hold)
+Provide a concise 2-3 sentence analysis of this forecast, including:
+1. The predicted price movement and its significance
+2. The confidence level based on model accuracy
+3. Any notable patterns or considerations from the recent trend
+4. The investment advice: {investment_advice}
+
+Keep the analysis professional and focused on key insights.
 """
-            messages = [
-                {"role": "system", "content": "You are a professional investment analyst. Give concise, actionable forecast advice."},
-                {"role": "user", "content": prompt.strip()}
-            ]
 
-            content = await self.openrouter_client.chat(messages=messages, temperature=0.3, max_tokens=200)
-            return f"{content}\n\nInvestment Recommendation: {investment_advice}"
+                messages = [
+                    {
+                        "role": "system",
+                        "content": "You are a professional financial analyst. Provide a clear, concise analysis of stock forecasts."
+                    },
+                    {"role": "user", "content": prompt}
+                ]
+
+                response = await self.openrouter_client.chat(
+                    messages=messages,
+                    temperature=0.3,
+                    max_tokens=300
+                )
+                return response if response else ""
+            except Exception as e:
+                logger.error(f"Error in generate_forecast_insights_async: {str(e)}")
+                return f"Unable to generate forecast insights: {str(e)}\n\nInvestment Recommendation: {investment_advice}"
 
         except OpenRouterError as e:
             logger.error(f"OpenRouter error in forecast insights: {e}")
             return f"Forecast: {symbol.upper()} expected change {price_change_pct:+.2f}%, Investment Advice: {investment_advice}"
         except Exception as e:
-            logger.exception("Error generating forecast insights")
+            logger.exception("Unexpected error in generate_forecast_insights_async")
             return f"Unexpected error: {str(e)}"
 
     def generate_forecast_insights(

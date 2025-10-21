@@ -139,6 +139,8 @@ logs/
 .DS_Store
 Thumbs.db
 config/email_config.json
+ai/ollama_client.py
+ai/insights.py
 
 
 # IDE

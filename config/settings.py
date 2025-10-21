@@ -29,6 +29,13 @@ OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
 OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "30.0"))
 OLLAMA_RETRIES = int(os.getenv("OLLAMA_RETRIES", "2"))
 
+# OpenRouter AI configuration
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "mistralai/mistral-7b-instruct")  # Default to Mistral 7B Instruct
+OPENROUTER_TEMPERATURE = float(os.getenv("OPENROUTER_TEMPERATURE", "0.3"))
+OPENROUTER_MAX_TOKENS = int(os.getenv("OPENROUTER_MAX_TOKENS", "500"))
+OPENROUTER_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "30.0"))
+
 # Dashboard configuration
 DASH_HOST = os.getenv("DASH_HOST", "0.0.0.0")
 DASH_PORT = int(os.getenv("DASH_PORT", "8050"))
