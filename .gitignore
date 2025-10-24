@@ -139,12 +139,10 @@ logs/
 .DS_Store
 Thumbs.db
 config/email_config.json
-ai/ollama_client.py
-ai/insights.py
+
 
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -153,3 +151,11 @@ ai/insights.py
 # Temporary files
 *.tmp
 *.temp
+
+# Local secrets and generated data
+saved data/
+
+# AI client modules to keep out of VCS
+src/market_dashboard/ai/ollama_client.py
+src/market_dashboard/ai/insights.py
+src/market_dashboard/ai/inisghts.py

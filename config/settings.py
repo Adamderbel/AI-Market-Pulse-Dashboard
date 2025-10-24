@@ -22,12 +22,6 @@ STOCK_TICKERS = [
 ]
 LOOKBACK_DAYS_STOCKS = int(os.getenv("LOOKBACK_DAYS_STOCKS", "730"))  # 2 years
 
-# Ollama AI configuration
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral:latest")
-OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
-OLLAMA_TIMEOUT = float(os.getenv("OLLAMA_TIMEOUT", "30.0"))
-OLLAMA_RETRIES = int(os.getenv("OLLAMA_RETRIES", "2"))
 
 # OpenRouter AI configuration
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
@@ -40,6 +34,9 @@ OPENROUTER_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "30.0"))
 DASH_HOST = os.getenv("DASH_HOST", "0.0.0.0")
 DASH_PORT = int(os.getenv("DASH_PORT", "8050"))
 DASH_DEBUG = os.getenv("DASH_DEBUG", "True").lower() in ("true", "1", "yes")
+
+# Chatbot API configuration
+CHAT_API_URL = os.getenv("CHAT_API_URL", "http://localhost:8000")
 
 # Chart configuration
 DEFAULT_CHART_HEIGHT = 650

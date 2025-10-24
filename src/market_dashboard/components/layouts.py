@@ -4,7 +4,6 @@ Contains all UI layout definitions.
 """
 import dash_bootstrap_components as dbc
 from dash import html, dcc
-from typing import List
 
 import sys
 from pathlib import Path
@@ -13,6 +12,54 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from config.settings import PERIOD_OPTIONS, DATE_RANGE_OPTIONS
 
 
+def create_chatbot_ui() -> html.Div:
+    """
+    Chatbot UI:
+    - Floating toggle button
+    - Chat container with header (minimize/close), messages, typing indicator, and input group
+    - Session store initialized with a greeting from the bot
+    Styles are provided via Dash assets at `src/market_dashboard/assets/chat.css`.
+    """
+
+    return html.Div([
+
+        # Session store with initial greeting from bot
+        dcc.Store(id="chat-store", storage_type="session", data={
+            "session_id": None,
+            "messages": [
+                {"role": "bot", "content": "Hello! How can I assist you today?"}
+            ]
+        }),
+
+        # Chat container
+        html.Div([
+            # Header
+            html.Div([
+                html.H5("AI Assistant"),
+                html.Div([
+                    dbc.Button("-", id="minimize-chat", size="sm", outline=True, color="light", className="me-1"),
+                    dbc.Button("×", id="close-chat", size="sm", outline=True, color="light"),
+                ])
+            ], className="chat-header"),
+
+            # Messages
+            html.Div(id="chat-messages", className="chat-messages"),
+
+            # Input area
+            html.Div([
+                html.Div([
+                    html.Span(), html.Span(), html.Span()
+                ], id="typing-indicator", className="typing-indicator"),
+                html.Div([
+                    dcc.Input(id="user-input", type="text", placeholder="Type your message...", debounce=False),
+                    dbc.Button("Send", id="send-button", color="primary")
+                ], className="input-group")
+            ], className="chat-input-container"),
+        ], id="chat-container", className="chat-container visible"),
+
+        # Floating toggle button
+        html.Button(children="💬", id="chat-toggle", className="btn btn-primary rounded-circle")
+    ])
 def create_landing_layout() -> dbc.Container:
     """
     Create the landing page layout.
@@ -44,7 +91,7 @@ def create_landing_layout() -> dbc.Container:
     ], fluid=True)
 
 
-def create_single_stock_layout(assets: List[str]) -> dbc.Container:
+def create_single_stock_layout(assets: list) -> dbc.Container:
     """
     Create the single stock analysis layout.
     
@@ -91,7 +138,7 @@ def create_single_stock_layout(assets: List[str]) -> dbc.Container:
             dbc.Col([
                 html.Label("Export:", className="fw-bold"),
                 html.Br(),
-                dbc.Button("📥 CSV", id="btn_csv", color="secondary", size="lg", className="w-100"),
+                dbc.Button(" CSV", id="btn_csv", color="secondary", size="lg", className="w-100"),
                 dcc.Download(id="download-dataframe-csv")
             ], width=2)
         ], className="mb-4"),
@@ -105,7 +152,7 @@ def create_single_stock_layout(assets: List[str]) -> dbc.Container:
     ], fluid=True)
 
 
-def create_multi_stock_layout(assets: List[str]) -> dbc.Container:
+def create_multi_stock_layout(assets: list) -> dbc.Container:
     """
     Create the multi-stock comparison layout.
     
@@ -161,10 +208,10 @@ def create_multi_stock_layout(assets: List[str]) -> dbc.Container:
     ], fluid=True)
 
 
-def create_forecast_layout(assets: List[str]) -> dbc.Container:
+def create_forecast_layout(assets: list) -> dbc.Container:
     """
     Create the stock forecasting layout.
-
+    
     Args:
         assets: List of available asset symbols
 
@@ -172,7 +219,7 @@ def create_forecast_layout(assets: List[str]) -> dbc.Container:
         Forecast layout component
     """
     return dbc.Container([
-        html.H3("📊 Stock Price Forecasting", className="mt-3 mb-3"),
+        html.H3(" Stock Price Forecasting", className="mt-3 mb-3"),
         dbc.Row([
             dbc.Col([
                 html.Label("Select Stock to Forecast:"),
@@ -233,7 +280,7 @@ def create_forecast_layout(assets: List[str]) -> dbc.Container:
     ], fluid=True)
 
 
-def create_dashboard_layout(assets: List[str]) -> dbc.Container:
+def create_dashboard_layout(assets: list) -> dbc.Container:
     """
     Create the main dashboard layout with tabs.
 
@@ -244,7 +291,7 @@ def create_dashboard_layout(assets: List[str]) -> dbc.Container:
         Dashboard layout component
     """
     return dbc.Container([
-        html.H2("📈 AI Market Pulse Dashboard", className="mt-3 mb-3"),
+        html.H2("AI Market Pulse Dashboard", className="mt-3 mb-3"),
         dcc.Tabs(id="dashboard-tabs", value='single-stock', children=[
             dcc.Tab(label='Single Stock Analysis', value='single-stock'),
             dcc.Tab(label='Multi-Stock Comparison', value='multi-stock'),
@@ -265,5 +312,7 @@ def create_app_layout() -> html.Div:
     """
     return html.Div([
         dcc.Location(id="url"),
-        html.Div(id="page-content-router")
+        html.Div(id="page-content-router"),
+        # Global chatbot UI
+        create_chatbot_ui(),
     ])

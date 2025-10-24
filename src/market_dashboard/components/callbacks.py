@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 from dash import Input, Output, State, dcc, html
+import requests
 import logging
 
 from ..data import DatabaseManager
@@ -19,7 +20,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from config.settings import DB_PATH, OPENROUTER_API_KEY
+from config.settings import DB_PATH, OPENROUTER_API_KEY, CHAT_API_URL
 
 
 logger = logging.getLogger(__name__)
@@ -597,6 +598,96 @@ ML models unavailable, using trend analysis.
         if stored_data and "content" in stored_data:
             return stored_data["content"]
         return html.Div()
+
+    # Chatbot UI-only callbacks (new UI)
+    @app.callback(
+        Output("chat-container", "className"),
+        [Input("chat-toggle", "n_clicks"), Input("minimize-chat", "n_clicks"), Input("close-chat", "n_clicks")],
+        State("chat-container", "className"),
+        prevent_initial_call=True,
+    )
+    def toggle_chat_container(toggle_clicks, minimize_clicks, close_clicks, class_name):
+        class_name = class_name or "chat-container"
+        # Simple toggle behavior for any click
+        if "visible" in class_name:
+            return "chat-container"
+        return "chat-container visible"
+
+    @app.callback(
+        [
+            Output("chat-store", "data"),
+            Output("user-input", "value"),
+            Output("typing-indicator", "className"),
+        ],
+        Input("send-button", "n_clicks"),
+        [State("user-input", "value"), State("chat-store", "data")],
+        prevent_initial_call=True,
+    )
+    def handle_send_message(n_clicks, text, store):
+        # Initialize store
+        store = store or {"session_id": None, "messages": []}
+        msgs = list(store.get("messages", []))
+
+        if not text:
+            # No change, just clear typing indicator
+            return store, "", "typing-indicator"
+
+        # Append user message immediately
+        msgs.append({"role": "user", "content": text})
+        store["messages"] = msgs
+
+        # Show typing indicator while calling API
+        typing_class = "typing-indicator visible"
+
+        try:
+            payload = {"question": text}
+            if store.get("session_id"):
+                payload["session_id"] = store["session_id"]
+
+            resp = requests.post(f"{CHAT_API_URL}/ask", json=payload, timeout=20)
+            if resp.ok:
+                data = resp.json()
+                answer = data.get("answer", "")
+                session_id = data.get("session_id") or store.get("session_id")
+                if session_id:
+                    store["session_id"] = session_id
+                if answer:
+                    msgs.append({"role": "bot", "content": answer})
+                    store["messages"] = msgs
+            else:
+                msgs.append({"role": "bot", "content": "Sorry, something went wrong. Please try again."})
+                store["messages"] = msgs
+        except Exception as e:
+            msgs.append({"role": "bot", "content": "Sorry, I couldn't reach the assistant API."})
+            store["messages"] = msgs
+
+        # Hide typing indicator after response
+        typing_class = "typing-indicator"
+
+        # Clear input box
+        return store, "", typing_class
+
+    @app.callback(
+        Output("chat-messages", "children"),
+        Input("chat-store", "data"),
+    )
+    def render_chat_messages(store):
+        msgs = (store or {}).get("messages", [])
+        if not msgs:
+            return html.Div(
+                "Ask anything about using this dashboard. (No AI backend connected yet)",
+                style={"color": "#6c757d"},
+            )
+
+        def bubble(m):
+            role = m.get("role", "bot")
+            text = m.get("content", "")
+            return html.Div(
+                html.Div(text, className="message-content"),
+                className=f"message {'user' if role == 'user' else 'bot'}",
+            )
+
+        return [bubble(m) for m in msgs]
 
 
 def create_kpi_cards(df, period):
