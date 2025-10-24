@@ -1,8 +1,8 @@
 # 📈 AI Market Pulse Dashboard
 
-A comprehensive, modular AI powered market analysis platform with automated data management, interactive visualizations, and intelligent insights. Built for professional market analysis with enterprise grade automation and AI integration.
+A comprehensive, modular, AI-powered market analysis platform featuring automated data management, interactive visualizations, and intelligent insights. It also includes an integrated chatbot assistant powered by my [AI-Powered RAG Chatbot](https://github.com/Adamderbel/AI-Powered-RAG-Chatbot) project. Designed for professional market analysis, it delivers enterprise-grade automation and advanced AI integration.
 
-**Note**: While this version focuses on financial markets, the modular design allows easy adaptation to other data sources (e.g., Google Ads, IoT sensors, weather). This demonstrates extensibility beyond finance. The choice of financial data was made due to its availability and ease of access.
+**Note**: While this version focuses on financial markets for the availability of data and ease of access, the modular design allows easy adaptation to other data sources (e.g., Google Ads, IoT sensors, weather).
 > 🔗 *Demo:* [AI Market Pulse Dashboard](https://adamderbel.github.io/Adam-Portfolio/ai-market-pulse.html)
 
 ## 🚀 Core Features
@@ -16,11 +16,12 @@ A comprehensive, modular AI powered market analysis platform with automated data
 ### 📈 **Advanced Market Analysis**
 - **Single Stock Analysis**: Detailed KPIs, price/volume charts, technical indicators, AI insights
 - **Multi-Stock Comparison**: Normalized performance, correlation analysis, comparative insights
-- **Price Forecasting**: Multiple ML models with confidence intervals and accuracy metrics
+- **Price Forecasting**: Multiple ML models with confidence intervals and accuracy metrics, AI insights
 - **Technical Indicators**: RSI, MACD, Bollinger Bands, Moving Averages, Volume Analysis
 
 ### 🤖 **AI & Machine Learning**
 - **Ollama LLM Integration**: Local AI for market analysis and recommendations
+- **Chatbot Helper:** An integrated AI assistant that guides users throughout the platform, answering questions and providing contextual support in real time.
 - **Multiple Forecasting Models**: Linear Regression, ARIMA, Ensemble methods
 - **Intelligent Insights**: AI-generated market commentary, trend analysis, and investment recommendations
 - **Model Validation**: Cross-validation, accuracy scoring, confidence intervals
@@ -59,50 +60,6 @@ A comprehensive, modular AI powered market analysis platform with automated data
 - Forecast reach and viral potential
 - AI commentary on content performance
 
-## 🎯 Dashboard Components
-
-### 1. **Single Stock Analysis Dashboard**
-- **Key Performance Indicators**: Price, volume, volatility, returns
-- **Interactive Charts**: Candlestick charts with volume overlay
-- **Technical Analysis**: Moving averages, RSI, MACD, Bollinger Bands
-- **AI Insights**: Automated analysis with trend identification and recommendations
-- **Data Export**: Download historical data as CSV
-
-### 2. **Multi-Stock Comparison Dashboard**
-- **Performance Comparison**: Normalized price charts for multiple assets
-- **Correlation Analysis**: Interactive heatmaps showing asset relationships
-- **Statistical Analysis**: Return distributions, volatility comparisons
-- **Comparative Insights**: AI powered analysis of relative performance
-
-### 3. **Price Forecasting Dashboard**
-- **Multiple Models**: Choose from Linear Regression, ARIMA, or Ensemble methods
-- **Configurable Periods**: 1, 3, 7 or 10-day forecasts
-- **Confidence Intervals**: Statistical confidence bounds for predictions
-- **Model Validation**: Accuracy metrics and performance scores
-- **AI Commentary**: Interpretation of forecast results and investment implications
-
-## 🔧 Technical Architecture
-
-### **Data Layer**
-- **Fetcher** (`src/market_dashboard/data/fetcher.py`): Yahoo Finance integration with error handling
-- **Database** (`src/market_dashboard/data/database.py`): SQLite operations with connection pooling
-- **Loader** (`src/market_dashboard/data/loader.py`): Data processing and storage pipeline
-
-### **AI & Analytics Layer**
-- **Insights Generator** (`src/market_dashboard/ai/insights.py`): AI powered market analysis
-- **Ollama Client** (`src/market_dashboard/ai/ollama_client.py`): Local LLM integration
-- **Forecasting** (`src/market_dashboard/utils/forecasting.py`): ML models and predictions
-
-### **Presentation Layer**
-- **App** (`src/market_dashboard/app.py`): Main Dash application with configuration
-- **Layouts** (`src/market_dashboard/components/layouts.py`): UI component definitions
-- **Callbacks** (`src/market_dashboard/components/callbacks.py`): Interactive functionality
-- **Charts** (`src/market_dashboard/components/charts.py`): Plotly visualization components
-
-### **Automation Layer**
-- **Auto Update** (`scripts/auto_daily_update.py`): Automated data pipeline
-- **Email Notifications**: SMTP integration with configurable templates
-- **Scheduling Scripts**: Windows batch files and Linux shell scripts
 
 ## 📁 Project Structure
 
@@ -114,6 +71,7 @@ market-dashboard/
 │       ├── data/                  # Data management modules
 │       ├── components/            # UI components
 │       ├── ai/                    # AI and analysis
+│       ├── assests/               # css styles 
 │       └── utils/                 # Utility functions
 ├── scripts/                       # Automation scripts
 ├── config/                        # Configuration files
@@ -140,17 +98,17 @@ market-dashboard/
    ```bash
    pip install -r requirements.txt
    ```
+3. **Set Up OpenRouter (for AI Features)**
 
-3. **Set Up Ollama (for AI Features)**
-   - Download and install Ollama from [ollama.com/download](https://ollama.com/download).
-   - Start the Ollama server:
-     ```bash
-     ollama serve
-     ```
-   - Pull and run the Mistral model (or any supported model):
-     ```bash
-     ollama pull mistral:latest
-     ```
+* Go to [OpenRouter.ai](https://openrouter.ai/) and sign up or log in.
+* Navigate to your **API Keys** section: [https://openrouter.ai/settings/keys](https://openrouter.ai/settings/keys)
+* Generate a new **API key**.
+* Create a `.env` file in the project root (if it doesn’t exist) and add your key:
+
+  ```bash
+  OPENROUTER_API_KEY=your_api_key_here
+  ```
+* The application will automatically use this key to access OpenRouter’s AI models for generating insights and chatbot responses.
 
 4. **Fetch and Load Initial Data**
    ```bash
@@ -247,39 +205,6 @@ python scripts/load_to_db.py
 - Ensure sufficient disk space
 - Try deleting `market.db` and re-running data scripts
 
-## 🔧 Customization
-
-### Adding New Stocks
-Edit `config/settings.py`:
-```python
-STOCK_TICKERS = [
-    "AAPL", "MSFT", "GOOGL", "AMZN", "TSLA",
-    "META", "NVDA", "SPY", "QQQ",
-    "YOUR_NEW_STOCK"  # Add your stocks here
-]
-```
-
-### Custom Technical Indicators
-Extend `src/market_dashboard/utils/calculations.py`:
-```python
-def custom_indicator(df):
-    # Your custom indicator logic
-    return df
-```
-
-### Custom AI Models
-Extend `src/market_dashboard/ai/insights.py`:
-```python
-def custom_analysis(self, data, symbol):
-    # Your custom AI analysis
-    return insights
-```
-## 💻 System Requirements
-
-- **RAM**: 4GB minimum, 8GB recommended
-- **Storage**: 1GB for data and logs
-- **CPU**: Any modern processor (2+ cores recommended)
-- **Network**: Stable internet for data fetching
 
 ### Health Checks
 ```bash
