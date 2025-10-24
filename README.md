@@ -20,7 +20,7 @@ A comprehensive, modular, AI-powered market analysis platform featuring automate
 - **Technical Indicators**: RSI, MACD, Bollinger Bands, Moving Averages, Volume Analysis
 
 ### 🤖 **AI & Machine Learning**
-- **Ollama LLM Integration**: Local AI for market analysis and recommendations
+- **OpenRouter:** Uses the `mistralai/mistral-7b-instruct` model via the OpenRouter API for AI-powered insights.
 - **Chatbot Helper:** An integrated AI assistant that guides users throughout the platform, answering questions and providing contextual support in real time.
 - **Multiple Forecasting Models**: Linear Regression, ARIMA, Ensemble methods
 - **Intelligent Insights**: AI-generated market commentary, trend analysis, and investment recommendations
@@ -196,9 +196,7 @@ python scripts/load_to_db.py
 - Verify firewall allows SMTP connections
 
 **AI insights not generating:**
-- Ensure Ollama is running: `ollama serve`
-- Check Ollama model is installed: `ollama pull mistral:latest`
-- Verify network connectivity to localhost:11434
+- Ensure you are using the correct api key for openrouter
 
 **Database errors:**
 - Check write permissions in project directory
