@@ -61,34 +61,40 @@ class InsightsGenerator:
             latest_date_str = latest_date.strftime("%Y-%m-%d") if pd.notna(latest_date) else "N/A"
 
             prompt = f"""
-Provide a concise market analysis for {symbol.upper()} over the recent {period} interval in 3-5 sentences.
-Cover: trend/momentum, volatility/gaps/spikes, notable levels (highs/lows, round numbers), moving average context,
-volume vs typical activity, and one clear risk or watch item.
+SYMBOL: {symbol.upper()}
+PERIOD: {period}
+LATEST:
+- Date: {latest_date_str}
+- O/H/L/C: {float(latest_row['open']):.2f} / {float(latest_row['high']):.2f} / {float(latest_row['low']):.2f} / {float(latest_row['close']):.2f}
+- Volume: {int(latest_row['volume']) if pd.notna(latest_row.get('volume')) else 0}
+RECENT_CHANGES: {', '.join(price_changes) if price_changes else 'n/a'}
 
-Recent change snapshots: {', '.join(price_changes) if price_changes else 'Insufficient history for change computations.'}
-
-Latest data:
-Date: {latest_date_str}
-Open: {float(latest_row['open']):.2f}
-High: {float(latest_row['high']):.2f}
-Low: {float(latest_row['low']):.2f}
-Close: {float(latest_row['close']):.2f}
-Volume: {int(latest_row['volume']) if pd.notna(latest_row.get('volume')) else 0}
+Respond ONLY in this exact Markdown template:
+```markdown
+# Market Insight: {symbol.upper()} ({period})
+- Summary: <one sentence>
+- Trend/Momentum: <one sentence>
+- Volatility: <one sentence>
+- Key Levels/MA: <one sentence>
+- Volume: <one sentence>
+- Risk/Watch: <one sentence>
+- Actionable Takeaway: <one sentence>
+```
+Keep it concise (60-100 words total). No disclaimers. No extra text.
 """
 
             messages = [
                 {
                     "role": "system",
                     "content": (
-                        "You are a professional market analyst. Write 3-5 crisp sentences. "
-                        "Explain trend/momentum, volatility, key levels/MA context, notable volume, "
-                        "and one actionable risk/watch item. Avoid filler and disclaimers."
+                        "You are a professional market analyst. Always respond using the user's exact Markdown template. "
+                        "Be concise, factual, and avoid any disclaimers or additional commentary."
                     )
                 },
                 {"role": "user", "content": prompt.strip()}
             ]
 
-            content = await self.openrouter_client.chat(messages=messages, temperature=0.2, max_tokens=320)
+            content = await self.openrouter_client.chat(messages=messages, temperature=0.1, max_tokens=320)
             return content.strip()
 
         except OpenRouterError as e:
@@ -121,28 +127,33 @@ Volume: {int(latest_row['volume']) if pd.notna(latest_row.get('volume')) else 0}
                 return "Insufficient data for comparative analysis."
 
             prompt = f"""
-Compare the following assets (period={period}): {', '.join(comparisons)}.
+PERIOD: {period}
+ASSETS: {', '.join(comparisons)}
 
-Write 3-5 sentences covering:
-- Relative performance ranking
-- Correlation/cluster behavior
-- Volatility or drawdown observations
-- One clear takeaway on positioning or risk
+Respond ONLY in this exact Markdown template:
+```markdown
+# Comparative Insight ({period})
+- Ranking: <best -> worst>
+- Performance: <SYM1: px (Δ%), SYM2: px (Δ%), ...>
+- Correlation/Clusters: <one sentence>
+- Volatility/Drawdown: <one sentence>
+- Actionable Takeaway: <one sentence>
+```
+Keep it concise (60-100 words). No disclaimers. No extra text.
 """
 
             messages = [
                 {
                     "role": "system",
                     "content": (
-                        "You are a professional market analyst. Provide 3-5 precise sentences. "
-                        "Rank assets, describe dispersion and correlation patterns, note volatility/drawdowns, "
-                        "and end with one clear, concise takeaway."
+                        "You are a professional market analyst. Always respond using the user's exact Markdown template. "
+                        "Be concise, factual, and avoid any disclaimers or additional commentary."
                     )
                 },
                 {"role": "user", "content": prompt.strip()}
             ]
 
-            content = await self.openrouter_client.chat(messages=messages, temperature=0.2, max_tokens=320)
+            content = await self.openrouter_client.chat(messages=messages, temperature=0.1, max_tokens=320)
             return content.strip()
 
         except OpenRouterError as e:
@@ -197,39 +208,47 @@ Write 3-5 sentences covering:
 
             try:
                 prompt = f"""
-Analyze this stock forecast for {symbol.upper()}:
+SYMBOL: {symbol.upper()}
+CURRENT_PRICE: {current_price:.2f}
+FORECAST_PRICE: {forecast_price:.2f}
+CHANGE_PCT: {price_change_pct:+.2f}%
+HORIZON_DAYS: {days_ahead}
+MODEL: {model_name}
+ACCURACY: {model_accuracy:.1f}%
+RECENT_TREND: {recent_trend}
+VOLATILITY_PCT: {volatility:.2f}%
+ADVICE: {investment_advice}
 
-Current Price: ${current_price:.2f}
-Forecast Price: ${forecast_price:.2f} ({price_change_pct:+.2f}%)
-Time Horizon: {days_ahead} days
-Model: {model_name}
-Model Accuracy: {model_accuracy:.1f}%
-Recent Trend: {recent_trend}
-Volatility: {volatility:.2f}%
-
-Provide a concise 2-3 sentence analysis of this forecast, including:
-1. The predicted price movement and its significance
-2. The confidence level based on model accuracy
-3. Any notable patterns or considerations from the recent trend
-4. The investment advice: {investment_advice}
-
-Keep the analysis professional and focused on key insights.
+Respond ONLY in this exact Markdown template:
+```markdown
+# Forecast Insight: {symbol.upper()}
+- Current vs Forecast: ${current_price:.2f} -> ${forecast_price:.2f} ({price_change_pct:+.2f}%)
+- Horizon: {days_ahead} days
+- Model: {model_name} ({model_accuracy:.1f}%)
+- Recent Trend/Volatility: {recent_trend}; {volatility:.2f}%
+- Assessment: <one sentence on significance and confidence>
+- Investment Advice: {investment_advice}
+```
+Keep it concise (50-90 words). No disclaimers. No extra text.
 """
 
                 messages = [
                     {
                         "role": "system",
-                        "content": "You are a professional financial analyst. Provide a clear, concise analysis of stock forecasts."
+                        "content": (
+                            "You are a professional financial analyst. Always respond using the user's exact Markdown template. "
+                            "Be concise, factual, and avoid any disclaimers or additional commentary."
+                        )
                     },
                     {"role": "user", "content": prompt}
                 ]
 
                 response = await self.openrouter_client.chat(
                     messages=messages,
-                    temperature=0.3,
+                    temperature=0.2,
                     max_tokens=300
                 )
-                return response if response else ""
+                return response.strip() if response else ""
             except Exception as e:
                 logger.error(f"Error in generate_forecast_insights_async: {str(e)}")
                 return f"Unable to generate forecast insights: {str(e)}\n\nInvestment Recommendation: {investment_advice}"

@@ -133,8 +133,7 @@ dmypy.json
 *.db
 *.sqlite
 *.sqlite3
-data/raw/
-data/processed/
+
 logs/
 .DS_Store
 Thumbs.db
@@ -153,7 +152,7 @@ config/email_config.json
 *.temp
 
 # Local secrets and generated data
-saved data/
+saved_data/
 
 # AI client modules to keep out of VCS
 src/market_dashboard/ai/ollama_client.py
